@@ -1,0 +1,17 @@
+{
+    "name": "j11e/markdown",
+    "description": "A simple markdown parser implemented for self-educative purposes, and because I want easy image collages.",
+    "keywords": ["j11e", "markdown"],
+    "homepage": "http://www.github.com/j11e/markdown",
+    "licence": "WTFPL-V2",
+    "authors": [
+        {
+            "name": "JD",
+            "email": "jd@j11e.net"
+        }
+    ],
+    "version": "1.0",   
+    "require": {
+        "php": ">=5.4"
+    }
+}
