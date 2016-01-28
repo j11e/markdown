@@ -8,6 +8,8 @@ class Parser
     use blocks\AtxHeading;
     use blocks\SetextHeading;
 
+    protected $blockTypes;
+
     protected $blocksData;
 
     /**
@@ -20,43 +22,45 @@ class Parser
     public function parse($markdownStr)
     {
         $markdownStr = $this->preprocess($markdownStr);
-        
         $lines = explode("\n", $markdownStr);
-
-        $blockTypes = $this->getBlockTypes();
+        $this->blockTypes = $this->getBlockTypes();
         $this->blocksData = array();
-        $currentParagraph = ['type' => 'paragraph', 'content' => ''];
+
+        $currentParagraph = array();
 
         $currentIndex = 0;
         while ($currentIndex < count($lines)) {
-            $currentType = 'paragraph';
-            foreach ($blockTypes as $blockType) {
-                $identifyMethod = 'identify' . ucfirst($blockType);
-                if ($this->$identifyMethod($lines, $currentIndex)) {
-                    $currentType = $blockType;
-                    break;
+            // empty lines just interrupt the current paragraph
+            if ($lines[$currentIndex] === '') {
+                if ($currentParagraph) {
+                    $this->blocksData[] = $this->parseParagraph($currentParagraph);
+                    $currentParagraph = array();
                 }
-            }
-
-            if ($currentType === 'paragraph') {
-                $currentParagraph['content'] .= $lines[$currentIndex];
                 $currentIndex++;
             } else {
-                if ($currentParagraph['content']) {
-                    $this->blocksData[] = $currentParagraph;
+                $currentType = $this->getMatchingBlockType($lines, $currentIndex);
+
+                if ($currentType === 'paragraph') {
+                    $currentParagraph[] = ltrim(rtrim($lines[$currentIndex]));
+                    $currentIndex++;
+                } else {
+                    if (count($currentParagraph)) {
+                        $this->blocksData[] = $this->parseParagraph($currentParagraph);
+                        $currentParagraph = array();
+                    }
+
+                    $parseMethod = 'parse' . ucfirst($currentType);
+                    $block = $this->$parseMethod($lines, $currentIndex);
+                    $currentIndex = $block['newIndex'];
+                    $this->blocksData[] = $block;
                 }
-
-                $currentParagraph = ['type' => 'paragraph', 'content' => ''];
-
-                $parserMethod = 'parse' . ucfirst($currentType);
-                $block = $this->$parserMethod($lines, $currentIndex);
-                $currentIndex = $block['newIndex'];
-                $this->blocksData[] = $block;
             }
         }
 
-        if ($currentParagraph['content']) {
-            $this->blocksData[] = $currentParagraph;
+        // when we're done inspecting all the lines, if we had a paragraph going,
+        // don't forget it
+        if ($currentParagraph) {
+            $this->blocksData[] = $this->parseParagraph($currentParagraph);
         }
 
         $output = '';
@@ -67,21 +71,38 @@ class Parser
         return $output;
     }
 
+    protected function getMatchingBlockType($lines, $index)
+    {
+        $type = 'paragraph';
+        foreach ($this->blockTypes as $blockType) {
+            $identifyMethod = 'identify' . ucfirst($blockType);
+            if ($this->$identifyMethod($lines, $index)) {
+                $type = $blockType;
+                break;
+            }
+        }
+
+        return $type;
+    }
+
     /**
      * pre-parsing processing. For now, simply standardize line endings.
      */
     protected function preprocess($markdownStr)
     {
-        $markdownStr = str_replace(['\r\n', '\n\r', '\r'], '\n', $markdownStr);
+        $markdownStr = str_replace(["\r\n", "\n\r", "\r"], "\n", $markdownStr);
         return $markdownStr;
     }
 
-    /**
-     * parses a single paragraph's content, recursively parsing inline modifiers
-     */
+    public function parseParagraph($contentLines)
+    {
+        $content = implode("\n", $contentLines);
+        return ["type" => "paragraph", "content" => $content];
+    }
+
     public function renderParagraph($blockData, $depth = 0)
     {
-        return '<p>'.$blockData['content'].'</p>';
+        return '<p>'.$this->parseInline($blockData['content']).'</p>';
     }
 
     /**
@@ -107,5 +128,15 @@ class Parser
         }, $blockTypes);
 
         return $blockTypes;
+    }
+
+    /**
+     * Parses inline modifiers inside a block. Also handles escaped markdown characters,
+     * and use htmlspecialchars on the text
+     */
+    public function parseInline($inlineContent)
+    {
+        // TODO, obviously
+        return htmlspecialchars($inlineContent);
     }
 }

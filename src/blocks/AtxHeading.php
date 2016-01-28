@@ -32,6 +32,6 @@ trait AtxHeading
 
     public function renderAtxHeading($blockData)
     {
-        return '<h'.$blockData['level'].'>'.$blockData['content'].'</h'.$blockData['level'].'>';
+        return '<h'.$blockData['level'].'>'.$this->parseInline($blockData['content']).'</h'.$blockData['level'].'>';
     }
 }
