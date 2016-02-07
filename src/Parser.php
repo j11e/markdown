@@ -7,10 +7,13 @@ class Parser
     use blocks\ThematicBreak;
     use blocks\AtxHeading;
     use blocks\SetextHeading;
+    use blocks\CodeBlock;
 
     protected $blockTypes;
 
     protected $blocksData;
+
+    protected $currentParagraph;
 
     /**
      * parses the text provided as parameter into HTML output.
@@ -26,32 +29,33 @@ class Parser
         $this->blockTypes = $this->getBlockTypes();
         $this->blocksData = array();
 
-        $currentParagraph = array();
+        $this->currentParagraph = array();
 
         $currentIndex = 0;
         while ($currentIndex < count($lines)) {
             // empty lines just interrupt the current paragraph
             if ($lines[$currentIndex] === '') {
-                if ($currentParagraph) {
-                    $this->blocksData[] = $this->parseParagraph($currentParagraph);
-                    $currentParagraph = array();
+                if ($this->currentParagraph) {
+                    $this->blocksData[] = $this->parseParagraph($this->currentParagraph);
+                    $this->currentParagraph = array();
                 }
                 $currentIndex++;
             } else {
                 $currentType = $this->getMatchingBlockType($lines, $currentIndex);
 
                 if ($currentType === 'paragraph') {
-                    $currentParagraph[] = ltrim(rtrim($lines[$currentIndex]));
+                    $this->currentParagraph[] = ltrim(rtrim($lines[$currentIndex]));
                     $currentIndex++;
                 } else {
-                    if (count($currentParagraph)) {
-                        $this->blocksData[] = $this->parseParagraph($currentParagraph);
-                        $currentParagraph = array();
-                    }
-
                     $parseMethod = 'parse' . ucfirst($currentType);
                     $block = $this->$parseMethod($lines, $currentIndex);
                     $currentIndex = $block['newIndex'];
+
+                    if (count($this->currentParagraph)) {
+                        $this->blocksData[] = $this->parseParagraph($this->currentParagraph);
+                        $this->currentParagraph = array();
+                    }
+
                     $this->blocksData[] = $block;
                 }
             }
@@ -59,8 +63,8 @@ class Parser
 
         // when we're done inspecting all the lines, if we had a paragraph going,
         // don't forget it
-        if ($currentParagraph) {
-            $this->blocksData[] = $this->parseParagraph($currentParagraph);
+        if ($this->currentParagraph) {
+            $this->blocksData[] = $this->parseParagraph($this->currentParagraph);
         }
 
         $output = '';
