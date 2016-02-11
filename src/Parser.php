@@ -8,6 +8,7 @@ class Parser
     use blocks\AtxHeading;
     use blocks\SetextHeading;
     use blocks\CodeBlock;
+    use blocks\HtmlBlock;
 
     protected $blockTypes;
 
@@ -67,11 +68,14 @@ class Parser
             $this->blocksData[] = $this->parseParagraph($this->currentParagraph);
         }
 
-        $output = '';
+        $output = [];
         for ($i=0; $i<count($this->blocksData); $i++) {
             $renderMethod = 'render'.ucfirst($this->blocksData[$i]['type']);
-            $output .= $this->$renderMethod($this->blocksData[$i]);
+            $output[] = $this->$renderMethod($this->blocksData[$i]);
         }
+        // for legibility, each block is separated from the previous one by a \n
+        $output = implode("\n", $output);
+
         return $output;
     }
 

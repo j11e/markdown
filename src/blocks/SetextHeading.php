@@ -33,17 +33,18 @@ trait SetextHeading
     {
         $level = ltrim($lines[$currentIndex+1])[0] === '=' ? 1 : 2;
 
-        $content = ltrim(rtrim($lines[$currentIndex]));
-
+        $content = [];
         // a setext heading can be a whole paragraph
         // so I only detect it on the paragraph's last line,
         // then consume the whole paragraph
-        $lastBlock = end($this->blocksData);
-        reset($this->blocksData);
-        if ($lastBlock['type'] === 'paragraph') {
-            $content = $lastBlock['content'] . "\n" . $content;
-            array_pop($this->blocksData);
+        if (count($this->currentParagraph) !== 0) {
+            //$content = array_merge($this->currentParagraph, $content);
+            $content = $this->currentParagraph;
+            $this->currentParagraph = [];
         }
+
+        $content[] = ltrim(rtrim($lines[$currentIndex]));
+        $content = implode("\n", $content);
 
         return ['newIndex' => $currentIndex+2,
                 'type' => 'SetextHeading',
