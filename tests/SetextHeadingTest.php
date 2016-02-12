@@ -79,12 +79,12 @@ class SetextHeadingTest extends \PHPUnit_Framework_TestCase
         );
         $this->assertEquals(
             $parser->parse("    hello\n    ---\n\n    Foo\n---"),
-            "<pre><code>hello\n---\n\nFoo</code></pre><hr />",
+            "<pre><code>hello\n---\n\nFoo\n</code></pre>\n<hr />",
             "Four spaces is too much for the content"
         );
         $this->assertEquals(
             $parser->parse("hello\n    ---"),
-            "<p>hello\n    ---</p>",
+            "<p>hello\n---</p>",
             "Four spaces is too much for the underlining"
         );
 
@@ -96,8 +96,8 @@ class SetextHeadingTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("hello\n-------------- -"),
-            "<p>hello</p><hr />",
-            "No spaces in between characters of the underlining"
+            "<p>hello</p>\n<hr />",
+            "No spaces in between characters of the underlining, ex #2"
         );
     }
 
@@ -119,13 +119,13 @@ class SetextHeadingTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("`Foo\n-----\n`"),
-            "<h2>`Foo</h2><p>`</p>",
+            "<h2>`Foo</h2>\n<p>`</p>",
             "Setext headings have precedence over inline structure"
         );
         $this->assertEquals(
             $parser->parse("<a title=\"a lot\n-----\nof dashes\"/>"),
-            "<h2>&lt;a title=&quot;a lot</h2><p>of dashes&quot;/&gt;</p>",
-            "Setext headings have precedence over inline structure"
+            "<h2>&lt;a title=&quot;a lot</h2>\n<p>of dashes&quot;/&gt;</p>",
+            "Setext headings have precedence over inline structure, ex #2"
         );
     }
 
@@ -134,8 +134,8 @@ class SetextHeadingTest extends \PHPUnit_Framework_TestCase
         $parser = new Parser();
 
         $this->assertEquals(
-            $parser->parse("foo\nhello\n==="),
-            "<h1>foo\nhello</h1>",
+            $parser->parse("foo\nhello\n---"),
+            "<h2>foo\nhello</h2>",
             "Setext headings can span multiple lines, if the content above was a paragraph"
         );
 
@@ -153,7 +153,7 @@ class SetextHeadingTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("---\nFoo\n---\nBar\n---\nBaz"),
-            "<hr /><h2>Foo</h2><h2>Bar</h2>Baz",
+            "<hr />\n<h2>Foo</h2>\n<h2>Bar</h2>\n<p>Baz</p>",
             "Setext headings do not need empty lines between other blocks and them"
         );
 
@@ -165,23 +165,26 @@ class SetextHeadingTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("---\n---"),
-            "<hr /><hr />",
+            "<hr />\n<hr />",
             "Setext headings' content can only be paragraphs, not other blocks"
         );
+
         $this->assertEquals(
             $parser->parse("- foo\n----"),
             "<ul><li>foo</li></ul><hr />",
-            "Setext headings' content can only be paragraphs, not other blocks"
+            "Setext headings' content can only be paragraphs, not other blocks, ex #2"
         );
+
         $this->assertEquals(
             $parser->parse("    foo\n---"),
-            "<pre><code>foo</code></pre><hr />",
-            "Setext headings' content can only be paragraphs, not other blocks"
+            "<pre><code>foo\n</code></pre>\n<hr />",
+            "Setext headings' content can only be paragraphs, not other blocks, ex #3"
         );
+
         $this->assertEquals(
             $parser->parse("> Foo\n---"),
-            "<blockquote><p>Foo</p></blockquote><hr />",
-            "Setext headings' content can only be paragraphs, not other blocks"
+            "<blockquote><p>Foo</p></blockquote>\n<hr />",
+            "Setext headings' content can only be paragraphs, not other blocks, ex #4"
         );
 
         $this->assertEquals(
@@ -197,7 +200,7 @@ class SetextHeadingTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("> Foo\n---"),
-            "<blockquote><p>Foo</p></blockquote><hr />",
+            "<blockquote><p>Foo</p></blockquote>\n<hr />",
             "Setext headings' underlining cannot be a lazy continuation line in a blockquote"
         );
 
@@ -209,7 +212,7 @@ class SetextHeadingTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("- Foo\n---"),
-            "<ul><li>Foo</li></ul><hr />",
+            "<ul><li>Foo</li></ul>\n<hr />",
             "Setext headings' underlining cannot be a lazy continuation line in a list"
         );
     }

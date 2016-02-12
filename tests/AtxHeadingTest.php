@@ -27,7 +27,7 @@ class AtxHeadingTest extends \PHPUnit_Framework_TestCase
         );
         $this->assertEquals(
             $parser->parse("    ## hello"),
-            "<pre><code>## hello</code></pre>",
+            "<pre><code>## hello\n</code></pre>",
             "Up to three spaces at the beginning of the line"
         );
 
@@ -140,13 +140,13 @@ class AtxHeadingTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("Foo\n# bar\nbaz"),
-            "<p>Foo</p><h1>bar</h1><p>baz</p>",
+            "<p>Foo</p>\n<h1>bar</h1>\n<p>baz</p>",
             "ATX headings can break paragraphs"
         );
 
         $this->assertEquals(
             $parser->parse("***\n## lol\n*****"),
-            "<hr /><h2>lol</h2><hr />",
+            "<hr />\n<h2>lol</h2>\n<hr />",
             "ATX headings do not need blank lines before nor after them"
         );
     }

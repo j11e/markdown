@@ -12,7 +12,7 @@ trait AtxHeading
     public function parseAtxHeading($lines, $currentIndex)
     {
         $curLine = $lines[$currentIndex];
-        preg_match('/^ {0,3}(#{1,6})( .*?)( #* *)?$/', $curLine, $rawContent);
+        preg_match('/^ {0,3}(#{1,6})+( .*?)?( #*+ *)?$/', $curLine, $rawContent);
 
         $level = strlen($rawContent[1]);
 

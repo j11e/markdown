@@ -71,7 +71,7 @@ class CodeBlockTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("    salut\nmec"),
-            "<pre><code>salut\n</code></pre><p>mec</p>",
+            "<pre><code>salut\n</code></pre>\n<p>mec</p>",
             "Paragraph can, however, interrupt code blocks"
         );
 
@@ -89,7 +89,7 @@ class CodeBlockTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("# Heading\n    foo\nHeading\n-------\n    foo\n----"),
-            "<h1>Heading</h1><pre><code>foo\n</code></pre><h2>Heading</h2><pre><code>foo\n</code></pre><hr />",
+            "<h1>Heading</h1>\n<pre><code>foo\n</code></pre>\n<h2>Heading</h2>\n<pre><code>foo\n</code></pre>\n<hr />",
             "Code blocks can occur immediately before and after other blocks"
         );
     }
@@ -190,7 +190,7 @@ class CodeBlockTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("> ```\n> aaa\n\nbbb"),
-            "<blockquote><pre><code>aaa\n</code></pre></blockquote><p>bbb</p>",
+            "<blockquote><pre><code>aaa\n</code></pre></blockquote>\n<p>bbb</p>",
             "Unclosed code blocks within a block quote end at the end of the quote"
         );
 
@@ -219,13 +219,13 @@ class CodeBlockTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("foo\n```\nbar\n```\nbaz"),
-            "<p>foo</p><pre><code>bar\n</code></pre><p>baz</p>",
+            "<p>foo</p>\n<pre><code>bar\n</code></pre>\n<p>baz</p>",
             "No need for blank lines before or after a paragraph"
         );
 
         $this->assertEquals(
             $parser->parse("foo\n---\n~~~\nbar\n~~~\n# baz"),
-            "<h2>foo</h2><pre><code>bar\n</code></pre><h1>baz</h1>",
+            "<h2>foo</h2>\n<pre><code>bar\n</code></pre>\n<h1>baz</h1>",
             "Other blocks do not need a blank line after or before"
         );
     }

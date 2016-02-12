@@ -30,7 +30,7 @@ class ThematicBreakTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($parser->parse(" ***"), $parser->parse("***"), "There can be up to 3 spaces at the beginning of the line");
         $this->assertEquals($parser->parse("  ***"), $parser->parse("***"), "There can be up to 3 spaces at the beginning of the line");
         $this->assertEquals($parser->parse("   ***"), $parser->parse("***"), "There can be up to 3 spaces at the beginning of the line");
-        $this->assertEquals($parser->parse("    ***"), "<pre><code>***</code></pre>", "There cannot be 4 spaces at the beginning of the line");
+        $this->assertEquals($parser->parse("    ***"), "<pre><code>***\n</code></pre>", "There cannot be 4 spaces at the beginning of the line");
 
         // spaces at the end of the line
         $this->assertEquals($parser->parse("***    "), "<hr />", "As many spaces as I want at the end of the line");
@@ -74,7 +74,7 @@ class ThematicBreakTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("- foo\n***\n- bar"),
-            "<ul><li>foo</li><hr /><ul><li>bar</li></ul>",
+            "<ul><li>foo</li></ul>\n<hr />\n<ul><li>bar</li></ul>",
             "Thembreaks do not need blank lines before nor after them"
         );
     }
@@ -85,19 +85,19 @@ class ThematicBreakTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("foo\n***\nbar"),
-            "<p>foo</p><hr /><p>bar</p>",
+            "<p>foo</p>\n<hr />\n<p>bar</p>",
             "Thembreaks have precedence over paragraphs"
         );
 
         $this->assertEquals(
             $parser->parse("Foo\n---\nbar"),
-            "<h2>Foo</h2><p>bar</p>",
+            "<h2>Foo</h2>\n<p>bar</p>",
             "Headlines have precedence over thembreaks"
         );
 
         $this->assertEquals(
             $parser->parse("- foo\n---\n- bar"),
-            "<ul><li>foo</li><hr /><ul><li>bar</li></ul>",
+            "<ul><li>foo</li></ul>\n<hr />\n<ul><li>bar</li></ul>",
             "Thembreaks have precedence over lists"
         );
     }
