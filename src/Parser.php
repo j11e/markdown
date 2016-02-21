@@ -4,11 +4,13 @@ namespace j11e\markdown;
 
 class Parser
 {
+    use blocks\Paragraph;
     use blocks\ThematicBreak;
     use blocks\AtxHeading;
     use blocks\SetextHeading;
     use blocks\CodeBlock;
     use blocks\HtmlBlock;
+    use blocks\LinkRef;
 
     protected $blockTypes;
 
@@ -71,7 +73,12 @@ class Parser
         $output = [];
         for ($i=0; $i<count($this->blocksData); $i++) {
             $renderMethod = 'render'.ucfirst($this->blocksData[$i]['type']);
-            $output[] = $this->$renderMethod($this->blocksData[$i]);
+            $rendered = $this->$renderMethod($this->blocksData[$i]);
+
+            if ($rendered) {
+                // blocks can render to an empty string; these don't count
+                $output[] = $rendered;
+            }
         }
         // for legibility, each block is separated from the previous one by a \n
         $output = implode("\n", $output);
@@ -102,15 +109,17 @@ class Parser
         return $markdownStr;
     }
 
-    public function parseParagraph($contentLines)
+    /**
+     * utility function for getBlockTypes and getInlineParsers
+     */
+    private function getAllMethodNames()
     {
-        $content = implode("\n", $contentLines);
-        return ["type" => "paragraph", "content" => $content];
-    }
+        $reflectSelf = new \ReflectionClass($this);
 
-    public function renderParagraph($blockData, $depth = 0)
-    {
-        return '<p>'.$this->parseInline($blockData['content']).'</p>';
+        // get all methods, keep only names
+        return array_map(function ($method) {
+            return $method->getName();
+        }, $reflectSelf->getMethods());
     }
 
     /**
@@ -118,12 +127,7 @@ class Parser
      */
     public function getBlockTypes()
     {
-        $reflectSelf = new \ReflectionClass($this);
-
-        // get all methods, keep only names
-        $allMethodsName = array_map(function ($method) {
-            return $method->getName();
-        }, $reflectSelf->getMethods());
+        $allMethodsName = $this->getAllMethodNames();
 
         // filter on names that start with identify
         $blockTypes = array_filter($allMethodsName, function ($name) {
@@ -139,12 +143,43 @@ class Parser
     }
 
     /**
-     * Parses inline modifiers inside a block. Also handles escaped markdown characters,
-     * and use htmlspecialchars on the text
+     * use reflection to retrieve all the inline handling functions from the traits used
+     */
+    public function getInlineParsers()
+    {
+        $allMethodsName = $this->getAllMethodNames();
+
+        return array_filter($allMethodsName, function ($name) {
+            return strncmp($name, "inlineParse", 11) === 0;
+        });
+    }
+
+    /**
+     * Parses inline modifiers inside a block
      */
     public function parseInline($inlineContent)
     {
-        // TODO, obviously
-        return htmlspecialchars($inlineContent);
+        foreach ($this->getInlineParsers() as $inlineParsingMethod) {
+            $inlineContent = $this->$inlineParsingMethod($inlineContent);
+        }
+
+        $eob = preg_quote('\<');
+        $ecb = preg_quote('\>');
+
+        $inlineContent = preg_replace_callback("/^((".$eob."|[^<])*)/", function ($match) {
+            return htmlentities($match[0]);
+        }, $inlineContent);
+
+        $inlineContent = preg_replace_callback("/(?<=([^\\\]>))((".$eob."|[^<])*)(?=([^\\\]<))/", function ($match) {
+            return htmlentities($match[0]);
+        }, $inlineContent);
+
+        $inlineContent = preg_replace_callback("/(?<=[^\\\]>)((".$ecb."|[^>])*)$/", function ($match) {
+            return htmlentities($match[0]);
+        }, $inlineContent);
+
+        // $inlineContent = preg_replace('/\\\([^a-zA-Z0-9])/', "$1", $inlineContent);
+
+        return $inlineContent;
     }
 }
