@@ -59,7 +59,6 @@ trait LinkRef
         $match = preg_match($lr_before_dst_pattern, $candidate, $groups);
 
         if (!$match) {
-            echo "no semicolon";
             return false;
         } else {
             $candidate = substr($candidate, strlen($groups[1]));
@@ -89,13 +88,11 @@ trait LinkRef
             $match = preg_match($lr_dst_nobrackets_subpattern, $candidate, $groups);
             
             if (!$match || count($groups) === 1 || strlen($groups[1]) === 0) {
-                echo "no destination";
                 return false;
             }
 
             $destination = $groups[1];
         }
-        echo "destination = $destination";
 
         $candidate = substr($candidate, strlen($groups[1]));
 

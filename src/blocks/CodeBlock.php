@@ -69,10 +69,10 @@ trait CodeBlock
         }
 
         // remove empty lines preceding or following the code block's content
-        while (end($content) === '') {
+        while (count($content) > 0 && end($content) === '') {
             array_pop($content);
         }
-        while ($content[0] === '') {
+        while (count($content) > 0 && $content[0] === '') {
             array_shift($content);
         }
 

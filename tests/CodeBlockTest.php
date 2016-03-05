@@ -190,7 +190,7 @@ class CodeBlockTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("> ```\n> aaa\n\nbbb"),
-            "<blockquote><pre><code>aaa\n</code></pre></blockquote>\n<p>bbb</p>",
+            "<blockquote>\n<pre><code>aaa\n</code></pre>\n</blockquote>\n<p>bbb</p>",
             "Unclosed code blocks within a block quote end at the end of the quote"
         );
 
@@ -202,7 +202,7 @@ class CodeBlockTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(
             $parser->parse("```\n```"),
-            "<pre><code></code></pre>",
+            "<pre><code>\n</code></pre>",
             "Code blocks can be empty"
         );
     }
